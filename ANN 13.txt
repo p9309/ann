@@ -1,0 +1,123 @@
+ANN 13
+
+
+import tensorflow as tf
+from tensorflow import keras
+! pip install -q -U keras-tuner
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 176.1/176.1 kB 1.9 MB/s eta 0:00:00
+import keras_tuner as kt
+(img_train, label_train), (img_test, label_test) = keras.datasets.fashion_mnist.load_data()
+
+# Normalize pixel values between 0 and 1
+img_train = img_train.astype('float32') / 255.0
+img_test = img_test.astype('float32') / 255.0
+def model_builder(hp):
+model = keras.Sequential()
+model.add(keras.layers.Flatten(input_shape=(28, 28)))
+# Tune the number of units in the first Dense layer
+# Choose an optimal value between 32-512
+hp_units = hp.Int('units', min_value=32, max_value=512, step=32)
+model.add(keras.layers.Dense(units=hp_units, activation='relu'))
+model.add(keras.layers.Dense(10))
+# Tune the learning rate for the optimizer
+# Choose an optimal value from 0.01, 0.001, or 0.0001
+hp_learning_rate = hp.Choice('learning_rate', values=[1e-2, 1e-3, 1e-4])
+model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate),
+loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+metrics=['accuracy'])
+return model
+tuner = kt.Hyperband(model_builder,
+objective='val_accuracy',
+max_epochs=10,
+factor=3,
+directory='my_dir',
+project_name='intro_to_kt')
+stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+tuner.search(img_train, label_train, epochs=10, validation_split=0.2, callbacks=[stop_early])
+# Get the optimal hyperparameters
+best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
+print(f"""
+The hyperparameter search is complete. The optimal number of units in the first densely-connected
+layer is {best_hps.get('units')} and the optimal learning rate for the optimizer
+is {best_hps.get('learning_rate')}.
+""")
+Trial 30 Complete [00h 01m 23s]
+val_accuracy: 0.8918333053588867
+Best val_accuracy So Far: 0.8918333053588867
+Total elapsed time: 00h 24m 06s
+The hyperparameter search is complete. The optimal number of units in the first densely-connected
+layer is 160 and the optimal learning rate for the optimizer
+11/8/23, 3:06 AM ANN 13.ipynb - Colaboratory
+https://colab.research.google.com/drive/1vc8Jip7TDMhWnSwYTRY7EqolQ6XEeaJb#printMode=true 2/3
+is 0.001.
+# Build the model with the optimal hyperparameters and train it on the data for 50 epochs
+model = tuner.hypermodel.build(best_hps)
+history = model.fit(img_train, label_train, epochs=50, validation_split=0.2)
+val_acc_per_epoch = history.history['val_accuracy']
+best_epoch = val_acc_per_epoch.index(max(val_acc_per_epoch)) + 1
+print('Best epoch: %d' % (best_epoch,))
+Epoch 1/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.5135 - accuracy: 0.8209 - val_loss: 0.3972 - val_accuracy: 0.8587
+Epoch 2/50
+1500/1500 [==============================] - 8s 6ms/step - loss: 0.3859 - accuracy: 0.8611 - val_loss: 0.4028 - val_accuracy: 0.8531
+Epoch 3/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.3485 - accuracy: 0.8721 - val_loss: 0.3674 - val_accuracy: 0.8612
+Epoch 4/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.3186 - accuracy: 0.8821 - val_loss: 0.3510 - val_accuracy: 0.8741
+Epoch 5/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.3022 - accuracy: 0.8888 - val_loss: 0.3308 - val_accuracy: 0.8806
+Epoch 6/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.2861 - accuracy: 0.8936 - val_loss: 0.3234 - val_accuracy: 0.8823
+Epoch 7/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.2740 - accuracy: 0.8980 - val_loss: 0.3310 - val_accuracy: 0.8795
+Epoch 8/50
+1500/1500 [==============================] - 7s 4ms/step - loss: 0.2601 - accuracy: 0.9032 - val_loss: 0.3524 - val_accuracy: 0.8729
+Epoch 9/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.2503 - accuracy: 0.9055 - val_loss: 0.3141 - val_accuracy: 0.8877
+Epoch 10/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.2407 - accuracy: 0.9101 - val_loss: 0.3248 - val_accuracy: 0.8901
+Epoch 11/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.2329 - accuracy: 0.9124 - val_loss: 0.3425 - val_accuracy: 0.8813
+Epoch 12/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.2243 - accuracy: 0.9161 - val_loss: 0.3184 - val_accuracy: 0.8882
+Epoch 13/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.2179 - accuracy: 0.9186 - val_loss: 0.3520 - val_accuracy: 0.8785
+Epoch 14/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.2089 - accuracy: 0.9211 - val_loss: 0.3145 - val_accuracy: 0.8930
+Epoch 15/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.2035 - accuracy: 0.9238 - val_loss: 0.3186 - val_accuracy: 0.8904
+Epoch 16/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.1971 - accuracy: 0.9260 - val_loss: 0.3284 - val_accuracy: 0.8900
+Epoch 17/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.1936 - accuracy: 0.9274 - val_loss: 0.3528 - val_accuracy: 0.8838
+Epoch 18/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.1862 - accuracy: 0.9302 - val_loss: 0.3598 - val_accuracy: 0.8848
+Epoch 19/50
+1500/1500 [==============================] - 7s 4ms/step - loss: 0.1818 - accuracy: 0.9319 - val_loss: 0.3460 - val_accuracy: 0.8874
+Epoch 20/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.1763 - accuracy: 0.9342 - val_loss: 0.3313 - val_accuracy: 0.8919
+Epoch 21/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.1705 - accuracy: 0.9348 - val_loss: 0.3376 - val_accuracy: 0.8949
+Epoch 22/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.1638 - accuracy: 0.9385 - val_loss: 0.3526 - val_accuracy: 0.8917
+Epoch 23/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.1632 - accuracy: 0.9376 - val_loss: 0.3628 - val_accuracy: 0.8907
+Epoch 24/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.1579 - accuracy: 0.9405 - val_loss: 0.3543 - val_accuracy: 0.8910
+Epoch 25/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.1534 - accuracy: 0.9432 - val_loss: 0.3880 - val_accuracy: 0.8867
+Epoch 26/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.1480 - accuracy: 0.9447 - val_loss: 0.3758 - val_accuracy: 0.8920
+Epoch 27/50
+1500/1500 [==============================] - 7s 5ms/step - loss: 0.1466 - accuracy: 0.9449 - val_loss: 0.3756 - val_accuracy: 0.8921
+Epoch 28/50
+1500/1500 [==============================] - 6s 4ms/step - loss: 0.1417 - accuracy: 0.9464 - val_loss: 0.3705 - val_accuracy: 0.8928
+Epoch 29/50
+1500/1500 [==============================] - 8s 5ms/step - loss: 0.1375 - accuracy: 0.9484 - val_loss: 0.3906 - val_accuracy: 0.8894
+hypermodel = tuner.hypermodel.build(best_hps)
+# Retrain the model
+hypermodel.fit(img_train, label_train, epochs=best_epoch, validation_split=0.2)
+account_circle Epoch 1/21
+
+eval_result = hypermodel.evaluate(img_test, label_test)
+print("[test loss, test accuracy]:", eval_result)

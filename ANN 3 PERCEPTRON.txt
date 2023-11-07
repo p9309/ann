@@ -1,0 +1,39 @@
+ANN 3 
+
+import numpy as np
+from numpy import random,dot
+from random import choice
+def unitstep(v):
+    print("v:",v)
+    if v>0:
+        return 1                                                                                                                  
+    else:
+        return 0
+w = [2]
+b =  0
+excepted = np.array([[0],[1],[0],[1],[0],[1],[0],[1],[0]])
+test1 = np.array([[np.array([38]),1],
+                  [np.array([39]),0],
+                  [np.array([40]),1],
+                  [np.array([91]),0],                             
+                  [np.array([92]),1],   
+                  [np.array([93]),0],                                                                
+                  [np.array([94]),1],                         
+                  [np.array([95]),0],
+                  [np.array([96]),1],
+                  [np.array([97]),0]])
+n = 50
+for i in range(n):
+    x,exp = choice(test1)
+    res = dot(x,w)
+    err = exp-res
+    w += 0.1*err*x
+    
+for x,_ in test1:
+    result = dot(x%2,w)
+    print("result:",unitstep(result))
+    tmp = unitstep(result)
+    if tmp>0:
+        print(x,"is odd number")
+    else:
+        print(x,"is even number")

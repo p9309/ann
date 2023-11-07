@@ -1,0 +1,19 @@
+ANN 2
+
+import numpy as np
+
+arr = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+weights = {
+    'ANDNOT': [1, -1],
+    'AND': [1, 1],
+    'OR': [1, 1],
+    'NOT': [-1, 1]
+}
+
+def logic_gate(operation, threshold):
+    return ['1' if np.dot(row, weights[operation]) >= threshold else '0' for row in arr]
+
+print("ANDNOT with threshold 1:", ''.join(logic_gate('ANDNOT', 1)))
+print("AND with threshold 2:", ''.join(logic_gate('AND', 2)))
+print("OR with threshold 1:", ''.join(logic_gate('OR', 1)))
+print("NOT with threshold 2:", ''.join(logic_gate('NOT', 2)))

@@ -1,0 +1,25 @@
+ANN 5 BAM
+
+import numpy as np
+
+class BAM:
+    def __init__(self, in_dim, out_dim):
+        self.W = np.zeros((in_dim, out_dim))
+
+    def train(self, X, Y):
+        self.W = np.dot(X.T, Y)
+
+    def predict_x(self, Y):
+        return np.where(np.dot(Y, self.W.T) > 0, 1, -1)
+
+    def predict_y(self, X):
+        return np.where(np.dot(X, self.W) > 0, 1, -1)
+
+X = np.array([[1, 0, 1, 0], [0, 1, 0, 1]])
+Y = np.array([[0, 1, 0, 1], [1, 0, 1, 0]])
+bam = BAM(in_dim=4, out_dim=4)
+bam.train(X, Y)
+
+x_test = np.array([1, 0, 0, 0])
+y_pred = bam.predict_y(x_test)
+print(y_pred)

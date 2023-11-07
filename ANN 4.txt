@@ -1,0 +1,39 @@
+ANN 4 
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+class Perceptron:
+    def __init__(self, input_dim, lr=0.1):
+        self.weights = np.random.randn(input_dim + 1)
+        self.lr = lr
+
+    def predict(self, inputs):
+        inputs = np.append(inputs, 1)
+        return np.sign(np.dot(self.weights, inputs))
+
+    def train(self, inputs, targets, epochs):
+        for _ in range(epochs):
+            for x, target in zip(inputs, targets):
+                prediction = self.predict(x)
+                if prediction != target:
+                    error = target - prediction
+                    self.weights += self.lr * error * np.append(x, 1)
+
+    def plot_decision_regions(self, inputs, targets):
+        x, y = inputs[:, 0], inputs[:, 1]
+        x_min, x_max = x.min() - 1, x.max() + 1
+        y_min, y_max = y.min() - 1, y.max() + 1
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
+        Z = np.array([self.predict([x, y]) for x, y in np.c_[xx.ravel(), yy.ravel()]])
+        Z = Z.reshape(xx.shape)
+        plt.contourf(xx, yy, Z, alpha=0.4)
+        plt.scatter(x, y, c=targets, edgecolors='black')
+        plt.show()
+
+inputs = np.array([[1, 2], [2, 3], [3, 1], [4, 3]])
+targets = np.array([1, 1, -1, -1])
+perceptron = Perceptron(input_dim=2)
+perceptron.train(inputs, targets, epochs=10)
+perceptron.plot_decision_regions(inputs, targets)
+
